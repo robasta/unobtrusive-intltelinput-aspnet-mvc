@@ -1,0 +1,84 @@
+﻿@model IntlTelInput_UnobtrusiveValidation.Models.Person
+@{
+    ViewBag.Title = "Home Page";
+}
+<style>
+    div.intl-tel-input{
+       display:block; 
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-8">
+        <h2>Unobtrusive validation with IntlTelInput</h2>
+        <form action="@Url.Action("Index")" method="post">
+            <div class="form-group">
+                @Html.LabelFor(m => m.Name)
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+                @Html.ValidationMessage("Name")
+                
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.MobileNumber, "Mobile Number" )
+                @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control" })
+                @Html.ValidationMessage("MobileNumber")
+                
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary" type="submit" title="Submit">Submit</button>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+@section scripts
+{
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        var input = document.querySelector("#MobileNumber");
+        var iti = window.intlTelInput(input,
+            {
+                hiddenInput: "FormattedMobileNumber",
+                initialCountry: "za",
+                nationalMode: true,
+                preferredCountries: ['za'],
+                utilsScript: "@Url.Content("~/plugins/intl-tel-input/js/utils.js")"
+            });
+
+        $.validator.unobtrusive.adapters.addBool("intltelinput");
+
+        $.validator.addMethod("intltelinput", function (value, element) {
+            return iti.isValidNumber();
+        });
+
+        $(document).ready(function () {
+            var form = $('form')
+                , formData = $.data(form[0])
+                , settings = formData.validator.settings
+                // Store existing event handlers in local variables
+                , oldErrorPlacement = settings.errorPlacement
+                , oldSuccess = settings.success;
+
+            settings.errorPlacement = function(label, element) {
+
+                // Call old handler so it can update the HTML
+                oldErrorPlacement(label, element);
+
+                // Add Bootstrap classes to newly added elements
+                label.parents('.form-group').addClass('has-error');
+                label.addClass('text-danger');
+            };
+
+            settings.success = function(label) {
+                // Remove error class from <div class="form-group">, but don't worry about
+                // validation error messages as the plugin is going to remove it anyway
+                label.parents('.form-group').removeClass('has-error');
+
+                // Call old handler to do rest of the work
+                oldSuccess(label);
+            };
+        });
+    </script>
+}
